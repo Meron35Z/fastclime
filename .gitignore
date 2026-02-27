@@ -15,3 +15,8 @@ src/*.dll
 # tests
 /tests/
 /scratch/
+
+# vignette source
+inst/doc/*.tex
+inst/doc/*.Rnw
+inst/doc/*.synctex.gz
