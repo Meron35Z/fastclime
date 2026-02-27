@@ -1,0 +1,7 @@
+^scratch$
+^LLM$
+^tests$
+^tmp$
+
+^.*\.tar\.gz$
+^.*\.zip$
