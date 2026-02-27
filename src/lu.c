@@ -942,7 +942,14 @@ static void Gauss_Eta(
     static int  currtag=1;
 
     if (m==0) {  // clean up
-        FREE(a); FREE(tag); link--; FREE(link); 
+        FREE(a); FREE(tag);
+        /* same defensive logic as in Nt_times_y: only decrement and
+           free the link pointer if it has been allocated.  avoid
+           pointer underflow when link is NULL. */
+        if (link != NULL) {
+            link--;
+            FREE(link);
+        }
 	currtag=1;
         return;
     }

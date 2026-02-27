@@ -266,6 +266,9 @@ void solver2(
 
   for (iter = 0; iter < lambda; iter++) {
 
+    /* allocate a fresh buffer for storing the current basic solution
+       the pointer is freed at the end of each iteration, so it must not
+       be reused outside this scope. */
     CALLOC(   output_vec, N, double );
     if(iter > *maxnlambda){
       *maxnlambda = iter;
@@ -426,7 +429,10 @@ void solver2(
       * step 8: refactor basis                                     *
       *************************************************************/
     refactor( m, ka, ia, a, basics, col_out, v );
-    FREE( output_vec );
+     /* free immediately after use to avoid holding on to memory between
+       iterations. the pointer value becomes invalid here, so it is
+       important not to touch it later. */
+     FREE( output_vec );
     
   }
    
@@ -445,7 +451,6 @@ void solver2(
   FREE(idy_N );
   FREE( nonbasics );
   FREE( basics );
-  FREE( output_vec );
   FREE(at);
   FREE(iat);
   FREE(basicflag);

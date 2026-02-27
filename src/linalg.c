@@ -146,10 +146,17 @@ void Nt_times_y(
     static int  currtag=1;
 
     if (n == -1) {
-	   if (a != NULL) FREE(a);
-	   if (tag != NULL) FREE(tag);
-	   link--;
-	   if (link != NULL) FREE(link);
+                 if (a != NULL) FREE(a);
+                 if (tag != NULL) FREE(tag);
+                 /* link was originally allocated with an extra element and then
+                         incremented.  Only decrement and free if it actually points to
+                         allocated memory.  under some error paths link can already be
+                         NULL, in which case pointer arithmetic would produce garbage
+                         (-4) and lead to an invalid free. */
+                 if (link != NULL) {
+                          link--;
+                          FREE(link);
+                 }
 	   return;
     }
 

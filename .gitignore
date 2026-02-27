@@ -1,0 +1,17 @@
+*.Rhistory
+*.RData
+*.Rproj.user
+*.code-workspace
+
+/LLM/
+
+*.tar.gz
+
+# compiled objects
+src/*.o
+src/*.so
+src/*.dll
+
+# tests
+/tests/
+/scratch/

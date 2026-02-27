@@ -7,76 +7,108 @@
 # Date: April 22th 2016                                                         #
 # Version: 1.4.1          					                                            #
 #-------------------------------------------------------------------------------#
-fastclime <- function(x, lambda.min=0.1, nlambda = 50)
-{
-  
+fastclime <- function(x, lambda.min = 0.1, nlambda = 50) {
   gcinfo(FALSE)
-  cov.input<-1
-  SigmaInput<-x
-  d<-dim(SigmaInput)[2]
+  cov.input <- 1
+  SigmaInput <- x
+  d <- dim(SigmaInput)[2]
 
-  if(!isSymmetric(x))
-  {
-     n<-dim(SigmaInput)[1]
-     SigmaInput<-cov(x)*(1-1/n)
-     cov.input<-0
+  if (!isSymmetric(x)) {
+    n <- dim(SigmaInput)[1]
+    SigmaInput <- cov(x) * (1 - 1 / n)
+    cov.input <- 0
   }
 
+  message("Allocating memory")
+  maxnlambda = 0
+  mu_input <- matrix(0, nlambda, d)
+  iicov <- matrix(0, nlambda, d * d)
+  lambdamin <- lambda.min
 
- 
-  cat("Allocating memory \n")
-  maxnlambda=0
-  mu_input<-matrix(0,nlambda,d)
-  iicov<-matrix(0,nlambda,d*d)
-  lambdamin<-lambda.min
+  message("start recovering")
+  str = .C(
+    "parametric",
+    as.double(SigmaInput),
+    as.integer(d),
+    as.double(mu_input),
+    as.double(lambdamin),
+    as.integer(nlambda),
+    as.integer(maxnlambda),
+    as.double(iicov),
+    PACKAGE = "fastclime"
+  )
 
- cat("start recovering \n")  
-     str=.C("parametric", as.double(SigmaInput), as.integer(d), as.double(mu_input), as.double(lambdamin), as.integer(nlambda), as.integer(maxnlambda), as.double(iicov), PACKAGE="fastclime")
+  message("preparing precision and path matrix list")
 
- cat("preparing precision and path matrix list \n")
- 
-  sigmahat<-matrix(unlist(str[1]),d)   
-  mu<-matrix(unlist(str[3]),nlambda,d)
-  maxnlambda<-unlist(str[6])+1
-  iicov<-matrix(unlist(str[7]),nlambda,d*d)
-  mu<-mu[1:maxnlambda,]
-  icov<-list()
-  
-  for (i in 1:maxnlambda)
-  {
-     icov[i]<-list(matrix(iicov[i,],d,d))
+  sigmahat <- matrix(unlist(str[1]), d)
+  mu <- matrix(unlist(str[3]), nlambda, d)
+  maxnlambda <- unlist(str[6]) + 1
+  iicov <- matrix(unlist(str[7]), nlambda, d * d)
+  # keep matrix structure even when maxnlambda == 1; drop=FALSE prevents
+  # back-conversion to a vector which later breaks selector() calls.
+  mu <- mu[1:maxnlambda, , drop = FALSE]
+  icov <- list()
+
+  for (i in seq_len(maxnlambda)) {
+    icov[[i]] <- matrix(iicov[i, ], d, d)
   }
   #icov[maxnlambda+1]=list(icov[[maxnlambda]])
 
-  result<-list("data" = x, "cov.input" = cov.input, "sigmahat" = sigmahat, "maxnlambda" = maxnlambda, "lambdamtx" = mu, "icovlist" = icov)
+  result <- list(
+    "data" = x,
+    "cov.input" = cov.input,
+    "sigmahat" = sigmahat,
+    "maxnlambda" = maxnlambda,
+    "lambdamtx" = mu,
+    "icovlist" = icov
+  )
 
-  rm(x,cov.input,sigmahat,maxnlambda,mu,icov,iicov,
-    nlambda,lambdamin,mu_input,SigmaInput,d)
+  rm(
+    x,
+    cov.input,
+    sigmahat,
+    maxnlambda,
+    mu,
+    icov,
+    iicov,
+    nlambda,
+    lambdamin,
+    mu_input,
+    SigmaInput,
+    d
+  )
   gc()
   class(result) = "fastclime"
-  cat("Done! \n")
+  message("Done!")
   return(result)
-
 }
 
-print.fastclime = function(x, ...)
-{	
-
-	if(x$cov.input) cat("Input: The Covariance Matrix\n")
-	if(!x$cov.input) cat("Input: The Data Matrix\n")
-	cat("Path length:",x$nlambda,"\n")
-	cat("Graph dimension:",ncol(x$data),"\n")
-	#cat("Sparsity level:",min(x$sparsity),"----->",max(x$sparsity),"\n")
+print.fastclime = function(x, ...) {
+  if (x$cov.input) {
+    message("Input: The Covariance Matrix")
+  }
+  if (!x$cov.input) {
+    message("Input: The Data Matrix")
+  }
+  message("Path length:", x$nlambda)
+  message("Graph dimension:", ncol(x$data))
+  #cat("Sparsity level:",min(x$sparsity),"----->",max(x$sparsity),"\n")
 }
 
 
-plot.fastclime = function(x, ...){
-        gcinfo(FALSE)
-        s<-x$lambda[,1]
-        poslambda<-s[s>0]
-        npos<-length(poslambda)
-	
-	plot(x$lambda[1:npos,1], x$sparsity[1:npos], log = "x", xlab = "Regularization Parameter", ylab = "Sparsity Level", type = "l", main = "Sparsity vs. Regularization")
-	
+plot.fastclime = function(x, ...) {
+  gcinfo(FALSE)
+  s <- x$lambda[, 1]
+  poslambda <- s[s > 0]
+  npos <- length(poslambda)
 
+  plot(
+    x$lambda[1:npos, 1],
+    x$sparsity[1:npos],
+    log = "x",
+    xlab = "Regularization Parameter",
+    ylab = "Sparsity Level",
+    type = "l",
+    main = "Sparsity vs. Regularization"
+  )
 }
