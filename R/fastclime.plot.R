@@ -18,6 +18,9 @@ fastclime.plot = function(
   if (missing(location)) {
     location = getwd()
   }
+  if (grepl("(^|/)\\.\\.(/|$)", location)) {
+    stop("Directory traversal not allowed")
+  }
   setwd(location)
   diag(G) = 0
   Matrix(G, sparse = TRUE)
