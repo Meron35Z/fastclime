@@ -207,7 +207,7 @@ void solver2(
   int     ndy_N=0;	/* number of nonz in dy_N */
   double  *dx_B;	/* primal basics step direction - values (sparse) */
   int    *idx_B;	/* primal basics step direction - row indices */
-  int     ndx_B;	/* number of nonz in dx_B */
+  int     ndx_B=0;	/* number of nonz in dx_B */
   double  *at;	/* sparse data structure for a^t */
   int    *iat;
   int    *kat;
@@ -218,9 +218,9 @@ void solver2(
   double  s, t, tbar, mu=HUGE_VAL;
   double  *vec;
   int    *ivec;
-  int     nvec;
+  int     nvec=0;
   int     status;
-  double *output_vec;
+  double *output_vec = NULL;
 
   
 
