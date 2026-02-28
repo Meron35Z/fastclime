@@ -8,22 +8,25 @@ test_that("dantzig.generator works", {
   expect_equal(sum(L_dg$BETA0), 0)
 })
 
-test_that("dantzig works", {
-  set.seed(42)
+test_that("dantzig and dantzig.selector work", {
+  # generate data
+  set.seed(123)
   a = dantzig.generator(n = 200, d = 100, sparsity = 0.1)
-  b = dantzig(a$X0, a$y, lambda = 0.1, nlambda = 100)
-  expect_equal(dim(b$BETA0), c(100, 100))
-  expect_equal(dim(b$BETA), c(100, 100))
-  expect_length(b$lambdalist, 100)
-})
 
-test_that("dantzig.selector works", {
-  set.seed(42)
-  a = dantzig.generator(n = 200, d = 100, sparsity = 0.1)
+  # regression coefficient estimation
   b = dantzig(a$X0, a$y, lambda = 0.1, nlambda = 100)
+
+  expect_equal(sum(b$BETA0[, 1]), 0)
+
+  expected_beta0_2 = rep(0, 100)
+  expected_beta0_2[100] = 0.5845398
+  expect_equal(b$BETA0[, 2], expected_beta0_2, tolerance = 1e-6)
+
+  # estimated regression coefficient vector
   c = dantzig.selector(b$lambdalist, b$BETA0, 15)
-  expect_length(c, 100)
-  expect_equal(sum(c), -1.53, tolerance = 1e-2)
+
+  # should be -0.08010963
+  expect_equal(sum(c), -0.08010963, tolerance = 1e-6)
 })
 
 test_that("fastclime.generator works for different graph types", {
@@ -53,18 +56,30 @@ test_that("fastclime.generator works for different graph types", {
 })
 
 test_that("fastclime and fastclime.selector work", {
-  set.seed(42)
-  L_fg1 = fastclime.generator(n = 100, d = 20)
-  out1 = fastclime(L_fg1$data,0.1)
+  set.seed(123)
+  L = fastclime.generator(n = 100, d = 20)
+
+  #graph path estimation
+  out1 = fastclime(L$data,0.1)
   out2 = fastclime.selector(out1$lambdamtx, out1$icovlist,0.2)
 
-  expect_length(out1$lambdamtx, 380)
-  expect_equal(dim(out1$icovlist[[1]]), c(20, 20))
-  expect_equal(dim(out2$adaj), c(20, 20))
+  pdf(file = NULL)
+  fastclime.plot(out2$adaj)
+  dev.off()
 
-  out3 = fastclime(cor(L_fg1$data),0.1)
-  out4 = fastclime.selector(out3$lambdamtx, out3$icovlist,0.2)
-  expect_length(out3$lambdamtx, 500)
+  expect_equal(sum(out1$icovlist[[1]]), 0)
+
+  expected_diag2 = c(0.7621407, 0.6337797, 0.9370682, 0.7667926, 0.7531294,
+                     0.7805857, 0.9035125, 0.7033197, 1.0275991, 0.6264976,
+                     0.6898066, 0.5739826, 0.8856609, 0.6319145, 0.7161172,
+                     0.8805116, 0.8251614, 0.6665530, 0.5894222, 0.7895643)
+  expect_equal(diag(out1$icovlist[[2]]), expected_diag2, tolerance = 1e-6)
+
+  expected_diag3 = c(0.9140404, 0.6557950, 1.0102614, 0.8298148, 0.8146116,
+                     0.8354372, 1.0899309, 0.8858942, 1.0711227, 0.6767176,
+                     0.8276655, 0.6209249, 0.9027221, 0.6879543, 0.9254351,
+                     0.9486373, 0.8426203, 0.7575949, 0.7198079, 0.8638316)
+  expect_equal(diag(out1$icovlist[[3]]), expected_diag3, tolerance = 1e-6)
 })
 
 test_that("fastlp works", {
