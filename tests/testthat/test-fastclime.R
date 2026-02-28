@@ -32,27 +32,25 @@ test_that("dantzig and dantzig.selector work", {
 test_that("fastclime.generator works for different graph types", {
   set.seed(42)
 
-  pdf(file = NULL)
-
+  # We test the different graph types, but set vis = FALSE to avoid
+  # plotting side-effects in testing environments.
   L_fg1 = fastclime.generator(n = 100, d = 20)
   expect_equal(dim(L_fg1$data), c(100, 20))
 
   L_fg2 = fastclime.generator(graph = "band", g = 3)
   expect_equal(dim(L_fg2$data), c(200, 50))
 
-  L_fg3 = fastclime.generator(vis = TRUE)
+  L_fg3 = fastclime.generator(vis = FALSE)
   expect_equal(dim(L_fg3$data), c(200, 50))
 
-  L_fg4 = fastclime.generator(prob = 0.5, vis = TRUE)
+  L_fg4 = fastclime.generator(prob = 0.5, vis = FALSE)
   expect_equal(dim(L_fg4$data), c(200, 50))
 
-  L_fg5 = fastclime.generator(graph = "hub", g = 6, vis = TRUE)
+  L_fg5 = fastclime.generator(graph = "hub", g = 6, vis = FALSE)
   expect_equal(dim(L_fg5$data), c(200, 50))
 
-  L_fg6 = fastclime.generator(graph = "cluster", g = 8, vis = TRUE)
+  L_fg6 = fastclime.generator(graph = "cluster", g = 8, vis = FALSE)
   expect_equal(dim(L_fg6$data), c(200, 50))
-
-  dev.off()
 })
 
 test_that("fastclime and fastclime.selector work", {
@@ -62,10 +60,6 @@ test_that("fastclime and fastclime.selector work", {
   #graph path estimation
   out1 = fastclime(L$data,0.1)
   out2 = fastclime.selector(out1$lambdamtx, out1$icovlist,0.2)
-
-  pdf(file = NULL)
-  fastclime.plot(out2$adaj)
-  dev.off()
 
   expect_equal(sum(out1$icovlist[[1]]), 0)
 
