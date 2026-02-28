@@ -18,7 +18,6 @@ fastclime.plot = function(
   if (missing(location)) {
     location = getwd()
   }
-  setwd(location)
   diag(G) = 0
   Matrix(G, sparse = TRUE)
   g = graph.adjacency(as.matrix(G != 0), mode = "undirected", diag = FALSE)
@@ -26,7 +25,7 @@ fastclime.plot = function(
 
   if (epsflag == TRUE) {
     postscript(
-      paste(paste(graph.name, cur.num, sep = ""), "eps", sep = "."),
+      file.path(location, paste(paste(graph.name, cur.num, sep = ""), "eps", sep = ".")),
       width = 8.0,
       height = 8.0
     )
